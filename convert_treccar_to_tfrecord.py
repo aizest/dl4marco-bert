@@ -92,8 +92,8 @@ def convert_dataset(data, corpus, set_name, tokenizer):
   random_title = list(corpus.keys())[0]
 
   with tf.python_io.TFRecordWriter(output_path) as writer:
-    for i, query in enumerate(data):
-      qrels, doc_titles = data[query]
+    for i, query in enumerate(data): # query is the key of the data dict
+      qrels, doc_titles = data[query] # qrels: relevant document ids. doc_titles: candidate document ids
       query = query.replace('enwiki:', '')
       query = query.replace('%20', ' ')
       query = query.replace('/', ' ')
@@ -126,10 +126,11 @@ def convert_dataset(data, corpus, set_name, tokenizer):
           for doc_title in doc_titles
       ]
 
+      ## token ids of all candidate documents
       doc_token_ids = [
           tokenization.convert_to_bert_input(
               text=tokenization.convert_to_unicode(corpus[doc_title]),
-              max_seq_length=FLAGS.max_seq_length - len(query_ids),
+              max_seq_length=FLAGS.max_seq_length - len(query_ids), # FLAGS.max_seq_length is the max of the full sequence (query + document)
               tokenizer=tokenizer,
               add_cls=False)
           for doc_title in doc_titles
@@ -142,6 +143,7 @@ def convert_dataset(data, corpus, set_name, tokenizer):
         labels_tf = tf.train.Feature(
             int64_list=tf.train.Int64List(value=[label]))
 
+        ## Number of relevant document according to gt(groundtruth)
         len_gt_titles_tf = tf.train.Feature(
             int64_list=tf.train.Int64List(value=[len(qrels)]))
 
